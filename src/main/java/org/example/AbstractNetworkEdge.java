@@ -21,4 +21,14 @@ public class AbstractNetworkEdge implements NetworkEdge {
     public int hashCode() {
         return Objects.hash(edgeId, nodeA, nodeB, isDirected);
     }
+
+    @Override
+    public String getEdgeId() {
+        return null;
+    }
+
+    @Override
+    public String getNodeA() {
+        return null;
+    }
 }
