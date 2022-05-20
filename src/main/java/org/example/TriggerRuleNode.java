@@ -1,6 +1,6 @@
 package org.example;
 
-public class TriggerRuleNode implements NetworkNode {
+public class TriggerRuleNode extends AbstractNetworkNode {
 
     private String nodeId;
 

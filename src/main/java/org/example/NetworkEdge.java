@@ -6,7 +6,7 @@ package org.example;
 public interface NetworkEdge {
 
     String edgeId = null;
-    boolean isDirected = true;
     NetworkNode nodeA = null;
     NetworkNode nodeB = null;
+    boolean isDirected = true;
 }
