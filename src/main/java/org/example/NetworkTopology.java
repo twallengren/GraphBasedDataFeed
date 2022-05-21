@@ -8,7 +8,5 @@ public interface NetworkTopology {
     String networkId = null;
     Map<NetworkNode, List<NetworkNode>> nodeAToNodeBMap = null;
 
-    List<NetworkNode> getNodeConnections(NetworkNode node);
-
-    void addNodeConnection(NetworkNode nodeA, NetworkNode nodeB);
+    Map<NetworkNode, List<NetworkNode>> getNodeAToNodeBMap();
 }
