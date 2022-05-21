@@ -8,8 +8,13 @@ public interface NetworkEdge {
     String edgeId = null;
     NetworkNode nodeA = null;
     NetworkNode nodeB = null;
-    boolean isDirected = true;
+    boolean directed = true;
 
     String getEdgeId();
-    String getNodeA();
+
+    NetworkNode getNodeA();
+
+    NetworkNode getNodeB();
+
+    boolean isDirected();
 }

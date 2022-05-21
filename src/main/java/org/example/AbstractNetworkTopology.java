@@ -1,33 +1,36 @@
 package org.example;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.logging.Logger;
+import java.util.Set;
 
-public class AbstractNetworkTopology implements NetworkTopology {
+abstract class AbstractNetworkTopology implements NetworkTopology {
 
     private final String networkId;
     private final Map<NetworkNode, List<NetworkNode>> nodeAToNodeBMap;
-    private final Logger logger = Logger.getLogger(AbstractNetworkTopology.class.getName());
 
-    AbstractNetworkTopology(Builder builder) {
-        this.networkId = builder.networkId;
-        this.nodeAToNodeBMap = builder.nodeAToNodeBMap;
+    private final boolean directed;
+    private final Set<NetworkEdge> edges;
+
+    AbstractNetworkTopology(String networkId, Map<NetworkNode, List<NetworkNode>> nodeAToNodeBMap,
+                            boolean directed, Set<NetworkEdge> edges) {
+        this.networkId = networkId;
+        this.nodeAToNodeBMap = nodeAToNodeBMap;
+        this.directed = directed;
+        this.edges = edges;
     }
 
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AbstractNetworkTopology that = (AbstractNetworkTopology) o;
-        return nodeAToNodeBMap.equals(that.nodeAToNodeBMap);
+        return networkId.equals(that.networkId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(nodeAToNodeBMap);
+        return Objects.hash(networkId);
     }
 
     public String getNetworkId() { return networkId; }
@@ -36,17 +39,7 @@ public class AbstractNetworkTopology implements NetworkTopology {
         return nodeAToNodeBMap;
     }
 
-    public static class Builder {
-        private final String networkId;
-        private Map<NetworkNode, List<NetworkNode>> nodeAToNodeBMap;
+    public boolean isDirected() { return directed; }
 
-        public Builder(String networkId, Map<NetworkNode, List<NetworkNode>> nodeAToNodeBMap) {
-            this.networkId = networkId;
-            this.nodeAToNodeBMap = nodeAToNodeBMap;
-        }
-
-        public AbstractNetworkTopology build() {
-            return new AbstractNetworkTopology(this);
-        }
-    }
+    public Set<NetworkEdge> getEdges() { return edges; }
 }
