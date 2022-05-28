@@ -1,19 +1,18 @@
 package org.example;
 
-import java.util.List;
-import java.util.Map;
-
 public class Main {
     public static void main(String[] args) {
-        NetworkNode nodeA0 = new TriggerRuleNode("A0");
-        NetworkNode nodeA1 = new TriggerRuleNode("A1");
-        NetworkNode nodeB0 = new TriggerRuleNode("B0");
-        NetworkNode nodeB1 = new TriggerRuleNode("B1");
-        Map<NetworkNode, List<NetworkNode>> networkMap = Map.of(
-                nodeA0, List.of(nodeA1, nodeB1),
-                nodeB0, List.of(nodeA1, nodeB1)
-        );
-        NetworkTopology networkTopology = new DataFeedNetworkTopology.Builder("0", networkMap).build();
-        System.out.println(networkTopology.toString());
+        DataFeedNetwork network = new DataFeedNetwork.Builder("0")
+                .addTriggerRuleNode("A0")
+                .addTriggerRuleNode("B0")
+                .addProcessingRuleNode("A1")
+                .addProcessingRuleNode("B1")
+                .addConnection("A0", "B0")
+                .addConnection("A0", "A1")
+                .addConnection("A0", "B1")
+                .addConnection("B0", "A1")
+                .addConnection("B0", "B1")
+                .build();
+        System.out.println("boobies");
     }
 }

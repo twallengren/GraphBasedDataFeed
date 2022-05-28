@@ -6,17 +6,12 @@ import java.util.Set;
 
 public interface NetworkTopology {
 
-    String networkId = null;
-    Map<NetworkNode, List<NetworkNode>> nodeAToNodeBMap = null;
-    Boolean directed = null;
-    Set<NetworkEdge> edges = null;
-
     String getNetworkId();
 
-    Map<NetworkNode, List<NetworkNode>> getNodeAToNodeBMap();
+    Map<String, List<String>> getNodeAToNodeBMap();
 
-    boolean isDirected();
+    Boolean isDirected();
 
-    Set<NetworkEdge> getEdges();
+    void addEdge(String nodeA, String nodeB);
 
 }

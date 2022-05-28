@@ -5,16 +5,9 @@ package org.example;
  */
 public interface NetworkEdge {
 
-    String edgeId = null;
-    NetworkNode nodeA = null;
-    NetworkNode nodeB = null;
-    boolean directed = true;
-
     String getEdgeId();
 
     NetworkNode getNodeA();
 
     NetworkNode getNodeB();
-
-    boolean isDirected();
 }

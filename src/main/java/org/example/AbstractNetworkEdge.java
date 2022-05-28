@@ -43,9 +43,4 @@ abstract class AbstractNetworkEdge implements NetworkEdge {
     public NetworkNode getNodeB() {
         return nodeB;
     }
-
-    @Override
-    public boolean isDirected() {
-        return directed;
-    }
 }

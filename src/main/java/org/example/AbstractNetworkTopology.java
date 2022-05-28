@@ -1,24 +1,26 @@
 package org.example;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.logging.Logger;
 
 abstract class AbstractNetworkTopology implements NetworkTopology {
 
     private final String networkId;
-    private final Map<NetworkNode, List<NetworkNode>> nodeAToNodeBMap;
+    private Map<String, List<String>> nodeAToNodeBMap;
+    private final Boolean directed;
 
-    private final boolean directed;
-    private final Set<NetworkEdge> edges;
+    private final Logger logger = Logger.getLogger(AbstractNetworkTopology.class.getName());
 
-    AbstractNetworkTopology(String networkId, Map<NetworkNode, List<NetworkNode>> nodeAToNodeBMap,
-                            boolean directed, Set<NetworkEdge> edges) {
+    AbstractNetworkTopology(String networkId) {
         this.networkId = networkId;
-        this.nodeAToNodeBMap = nodeAToNodeBMap;
+        this.nodeAToNodeBMap = new HashMap<>();
+        this.directed = null;
+    }
+
+    AbstractNetworkTopology(String networkId, boolean directed) {
+        this.networkId = networkId;
+        this.nodeAToNodeBMap = new HashMap<>();
         this.directed = directed;
-        this.edges = edges;
     }
 
     public boolean equals(Object o) {
@@ -33,13 +35,31 @@ abstract class AbstractNetworkTopology implements NetworkTopology {
         return Objects.hash(networkId);
     }
 
+    @Override
     public String getNetworkId() { return networkId; }
 
-    public Map<NetworkNode, List<NetworkNode>> getNodeAToNodeBMap() {
+    @Override
+    public Map<String, List<String>> getNodeAToNodeBMap() {
         return nodeAToNodeBMap;
     }
 
-    public boolean isDirected() { return directed; }
+    @Override
+    public Boolean isDirected() { return directed; }
 
-    public Set<NetworkEdge> getEdges() { return edges; }
+    @Override
+    public void addEdge(String fromNode, String toNode) {
+        if (nodeAToNodeBMap.containsKey(fromNode)) {
+            List<String> toNodes = nodeAToNodeBMap.get(fromNode);
+            if (toNodes.contains(toNode)) {
+                logger.info("Edge from " + fromNode + " to " + toNode + " already exists.");
+            } else {
+                toNodes.add(toNode);
+                nodeAToNodeBMap.put(fromNode, toNodes);
+                logger.info("Edge added from " + fromNode + " to " + toNode + ".");
+            }
+        } else {
+            nodeAToNodeBMap.put(fromNode, new ArrayList<>(Collections.singleton(toNode)));
+            logger.info("Edge added from " + fromNode + " to " + toNode + ".");
+        }
+    }
 }
