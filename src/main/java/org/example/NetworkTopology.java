@@ -8,7 +8,7 @@ public interface NetworkTopology {
 
     String getNetworkId();
 
-    Map<String, List<String>> getNodeAToNodeBMap();
+    Map<String, Set<String>> getNodeAToNodeBMap();
 
     Boolean isDirected();
 

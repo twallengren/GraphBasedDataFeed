@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 abstract class AbstractNetworkTopology implements NetworkTopology {
 
     private final String networkId;
-    private Map<String, List<String>> nodeAToNodeBMap;
+    private Map<String, Set<String>> nodeAToNodeBMap;
     private final Boolean directed;
 
     private final Logger logger = Logger.getLogger(AbstractNetworkTopology.class.getName());
@@ -23,6 +23,18 @@ abstract class AbstractNetworkTopology implements NetworkTopology {
         this.directed = directed;
     }
 
+    @Override
+    public String getNetworkId() { return networkId; }
+
+    @Override
+    public Map<String, Set<String>> getNodeAToNodeBMap() {
+        return nodeAToNodeBMap;
+    }
+
+    @Override
+    public Boolean isDirected() { return directed; }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -36,20 +48,9 @@ abstract class AbstractNetworkTopology implements NetworkTopology {
     }
 
     @Override
-    public String getNetworkId() { return networkId; }
-
-    @Override
-    public Map<String, List<String>> getNodeAToNodeBMap() {
-        return nodeAToNodeBMap;
-    }
-
-    @Override
-    public Boolean isDirected() { return directed; }
-
-    @Override
     public void addEdge(String fromNode, String toNode) {
         if (nodeAToNodeBMap.containsKey(fromNode)) {
-            List<String> toNodes = nodeAToNodeBMap.get(fromNode);
+            Set<String> toNodes = nodeAToNodeBMap.get(fromNode);
             if (toNodes.contains(toNode)) {
                 logger.info("Edge from " + fromNode + " to " + toNode + " already exists.");
             } else {
@@ -58,7 +59,7 @@ abstract class AbstractNetworkTopology implements NetworkTopology {
                 logger.info("Edge added from " + fromNode + " to " + toNode + ".");
             }
         } else {
-            nodeAToNodeBMap.put(fromNode, new ArrayList<>(Collections.singleton(toNode)));
+            nodeAToNodeBMap.put(fromNode, new HashSet<>(Collections.singleton(toNode)));
             logger.info("Edge added from " + fromNode + " to " + toNode + ".");
         }
     }
