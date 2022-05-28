@@ -45,7 +45,9 @@ public class DataFeedNetwork<X,Y> extends AbstractNetwork {
         return networkTopology;
     }
 
-    public Y evaluatePath(String fromNode, String toNode, X inputValue, Y initialAggregate) {
+    public DataFeedDataPacket<X,Y> evaluatePath(String fromNode, String toNode, DataFeedDataPacket<X,Y> dataFeedDataPacket) {
+        X inputValue = dataFeedDataPacket.getValue();
+        Y initialAggregate = dataFeedDataPacket.getAggregate();
         logger.info("Evaluating path from " + fromNode + " to " + toNode);
         if (networkTopology.isProducerNode(fromNode)) {
             logger.info("Node " + fromNode + " input: " + inputValue.toString());
@@ -77,9 +79,13 @@ public class DataFeedNetwork<X,Y> extends AbstractNetwork {
                     }
                     logger.info("Node " + toNode + " output: " + toNodeOutput);
                     logger.info("Node " + toNode + " aggregate: " + toNodeAggregate);
-                    return toNodeAggregate;
+                    dataFeedDataPacket.setValue(toNodeOutput);
+                    dataFeedDataPacket.setAggregate(toNodeAggregate);
+                    return dataFeedDataPacket;
                 } else {
-                    return evaluatePath(nodeId, toNode, fromNodeOutput, fromNodeAggregate);
+                    dataFeedDataPacket.setValue(fromNodeOutput);
+                    dataFeedDataPacket.setAggregate(fromNodeAggregate);
+                    return evaluatePath(nodeId, toNode, dataFeedDataPacket);
                 }
             }
         } else {
