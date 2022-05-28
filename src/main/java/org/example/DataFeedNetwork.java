@@ -1,17 +1,18 @@
 package org.example;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-public class DataFeedNetwork<X> extends AbstractNetwork {
+public class DataFeedNetwork<X,Y> extends AbstractNetwork {
 
-    private final Map<String, DataFeedNetworkNode<X>> nodes;
+    private final Map<String, DataFeedNetworkNode<X,Y>> nodes;
     private final Map<String, DataFeedNetworkEdge> edges;
     private final DataFeedNetworkTopology networkTopology;
     private final Logger logger = Logger.getLogger(DataFeedNetwork.class.getName());
 
-    DataFeedNetwork(Builder<X> builder) {
+    DataFeedNetwork(Builder<X,Y> builder) {
         super(builder.networkId);
         this.nodes = builder.idToNodeMap;
         this.edges = builder.idToEdgeMap;
@@ -20,7 +21,7 @@ public class DataFeedNetwork<X> extends AbstractNetwork {
     }
 
     @Override
-    public DataFeedNetworkNode<X> getNode(String nodeId) {
+    public DataFeedNetworkNode<X,Y> getNode(String nodeId) {
         if (nodes.containsKey(nodeId)) {
             return nodes.get(nodeId);
         } else {
@@ -44,29 +45,33 @@ public class DataFeedNetwork<X> extends AbstractNetwork {
         return networkTopology;
     }
 
-    public X evaluatePath(String fromNode, String toNode, X toInput) {
+    public X evaluatePath(String fromNode, String toNode, X toInput, Y initialValue) {
         logger.info("Evaluating path from " + fromNode + " to " + toNode);
         if (networkTopology.isProducerNode(fromNode)) {
             logger.info("Node " + fromNode + " input: " + toInput.toString());
             X fromNodeOutput = applyTransferFunction(toInput, fromNode);
-            if (fromNodeOutput == null) {
+            Y fromNodeAggregate = applyAggregatingFunction(toInput, initialValue, fromNode);
+            if (fromNodeOutput == null || fromNodeAggregate == null) {
                 logger.info("Node " + fromNode + " not triggered at value " + toInput + ". Cannot finish path evaluation.");
                 return null;
             }
             logger.info("Node " + fromNode + " output: " + fromNodeOutput);
+            logger.info("Node " + fromNode + " aggregate: " + fromNodeAggregate);
             for (String nodeId : networkTopology.getNodesListeningTo(fromNode)) {
                 if (toNode.equals(nodeId)) {
                     logger.info("Applying final transfer function at node " + toNode);
                     logger.info("Node " + toNode + " input: " + fromNodeOutput);
                     X toNodeOutput = applyTransferFunction(fromNodeOutput, toNode);
-                    if (toNodeOutput == null) {
+                    Y toNodeAggregate = applyAggregatingFunction(fromNodeOutput, fromNodeAggregate, toNode);
+                    if (toNodeOutput == null || toNodeAggregate == null) {
                         logger.info("Node " + toNode + " not triggered at value " + fromNodeOutput + ". Cannot finish path evaluation.");
                         return null;
                     }
                     logger.info("Node " + toNode + " output: " + toNodeOutput);
+                    logger.info("Node " + toNode + " aggregate: " + toNodeAggregate);
                     return toNodeOutput;
                 } else {
-                    return evaluatePath(nodeId, toNode, fromNodeOutput);
+                    return evaluatePath(nodeId, toNode, fromNodeOutput, fromNodeAggregate);
                 }
             }
         } else {
@@ -85,10 +90,20 @@ public class DataFeedNetwork<X> extends AbstractNetwork {
         }
     }
 
-    public static class Builder<X> {
+    public Y applyAggregatingFunction(X value, Y aggregate, String nodeId) {
+        if (nodes.containsKey(nodeId)) {
+            logger.info("Applying node " + nodeId + " aggregating function.");
+            return nodes.get(nodeId).applyAggregatingFunction(value, aggregate);
+        } else {
+            logger.info("Node " + nodeId + " does not exist in network " + getNetworkId() + ". Aggregating function not applied.");
+            return null;
+        }
+    }
+
+    public static class Builder<X,Y> {
 
         private final String networkId;
-        private Map<String, DataFeedNetworkNode<X>> idToNodeMap = new HashMap<>();
+        private Map<String, DataFeedNetworkNode<X,Y>> idToNodeMap = new HashMap<>();
         private Map<String, DataFeedNetworkEdge> idToEdgeMap = new HashMap<>();
         private final DataFeedNetworkTopology networkTopology;
         private final Logger logger = Logger.getLogger(Builder.class.getName());
@@ -99,18 +114,18 @@ public class DataFeedNetwork<X> extends AbstractNetwork {
             logger.info("DataFeedNetwork " + networkId + " Builder created");
         }
 
-        public Builder<X> addNode(String nodeId, Function<X,X> transferFunction, Function<X,Boolean> triggerFunction) {
+        public Builder<X,Y> addNode(String nodeId, Function<X,X> transferFunction, BiFunction<X,Y,Y> aggregatingFunction, Function<X, Boolean> triggerFunction) {
             if (idToNodeMap.containsKey(nodeId)) {
                 logger.info("Node " + nodeId + " already exists.");
             } else {
-                DataFeedNetworkNode<X> networkNode = new DataFeedNetworkNode.Builder<>(nodeId, transferFunction, triggerFunction).build();
+                DataFeedNetworkNode<X,Y> networkNode = new DataFeedNetworkNode.Builder<X,Y>(nodeId, transferFunction, aggregatingFunction, triggerFunction).build();
                 idToNodeMap.put(nodeId, networkNode);
                 logger.info("Node "+ nodeId + " created.");
             }
             return this;
         }
 
-        public Builder<X> addConnection(String fromNode, String toNode) {
+        public Builder<X,Y> addConnection(String fromNode, String toNode) {
             if (!idToNodeMap.containsKey(fromNode)) {
                 logger.info("Node " + fromNode + " is not recognized. No connection created.");
                 return this;
@@ -125,14 +140,14 @@ public class DataFeedNetwork<X> extends AbstractNetwork {
                 return this;
             }
             networkTopology.addEdge(fromNode, toNode);
-            DataFeedNetworkNode<X> fromNetworkNode = idToNodeMap.get(fromNode);
-            DataFeedNetworkNode<X> toNetworkNode = idToNodeMap.get(toNode);
+            DataFeedNetworkNode<X,Y> fromNetworkNode = idToNodeMap.get(fromNode);
+            DataFeedNetworkNode<X,Y> toNetworkNode = idToNodeMap.get(toNode);
             DataFeedNetworkEdge networkEdge = new DataFeedNetworkEdge.Builder(edgeId, fromNetworkNode, toNetworkNode).build();
             idToEdgeMap.put(edgeId, networkEdge);
             return this;
         }
 
-        public DataFeedNetwork<X> build() {
+        public DataFeedNetwork<X,Y> build() {
             logger.info("Building DataFeedNetwork...");
             return new DataFeedNetwork<>(this);
         }
