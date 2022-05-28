@@ -45,14 +45,18 @@ public class DataFeedNetwork<X,Y> extends AbstractNetwork {
         return networkTopology;
     }
 
-    public X evaluatePath(String fromNode, String toNode, X toInput, Y initialValue) {
+    public Y evaluatePath(String fromNode, String toNode, X inputValue, Y initialAggregate) {
         logger.info("Evaluating path from " + fromNode + " to " + toNode);
         if (networkTopology.isProducerNode(fromNode)) {
-            logger.info("Node " + fromNode + " input: " + toInput.toString());
-            X fromNodeOutput = applyTransferFunction(toInput, fromNode);
-            Y fromNodeAggregate = applyAggregatingFunction(toInput, initialValue, fromNode);
-            if (fromNodeOutput == null || fromNodeAggregate == null) {
-                logger.info("Node " + fromNode + " not triggered at value " + toInput + ". Cannot finish path evaluation.");
+            logger.info("Node " + fromNode + " input: " + inputValue.toString());
+            X fromNodeOutput = applyTransferFunction(inputValue, initialAggregate, fromNode);
+            if (fromNodeOutput == null) {
+                logger.info("Node " + fromNode + " not triggered at value " + inputValue + ". Cannot finish path evaluation.");
+                return null;
+            }
+            Y fromNodeAggregate = applyAggregatingFunction(fromNodeOutput, initialAggregate, fromNode);
+            if (fromNodeAggregate == null) {
+                logger.info("Node " + fromNode + " not triggered at value " + inputValue + ". Cannot finish path evaluation.");
                 return null;
             }
             logger.info("Node " + fromNode + " output: " + fromNodeOutput);
@@ -61,15 +65,19 @@ public class DataFeedNetwork<X,Y> extends AbstractNetwork {
                 if (toNode.equals(nodeId)) {
                     logger.info("Applying final transfer function at node " + toNode);
                     logger.info("Node " + toNode + " input: " + fromNodeOutput);
-                    X toNodeOutput = applyTransferFunction(fromNodeOutput, toNode);
-                    Y toNodeAggregate = applyAggregatingFunction(fromNodeOutput, fromNodeAggregate, toNode);
-                    if (toNodeOutput == null || toNodeAggregate == null) {
+                    X toNodeOutput = applyTransferFunction(fromNodeOutput, fromNodeAggregate, toNode);
+                    if (toNodeOutput == null) {
+                        logger.info("Node " + toNode + " not triggered at value " + fromNodeOutput + ". Cannot finish path evaluation.");
+                        return null;
+                    }
+                    Y toNodeAggregate = applyAggregatingFunction(toNodeOutput, fromNodeAggregate, toNode);
+                    if (toNodeAggregate == null) {
                         logger.info("Node " + toNode + " not triggered at value " + fromNodeOutput + ". Cannot finish path evaluation.");
                         return null;
                     }
                     logger.info("Node " + toNode + " output: " + toNodeOutput);
                     logger.info("Node " + toNode + " aggregate: " + toNodeAggregate);
-                    return toNodeOutput;
+                    return toNodeAggregate;
                 } else {
                     return evaluatePath(nodeId, toNode, fromNodeOutput, fromNodeAggregate);
                 }
@@ -80,10 +88,10 @@ public class DataFeedNetwork<X,Y> extends AbstractNetwork {
         return null;
     }
 
-    public X applyTransferFunction(X toInput, String nodeId) {
+    public X applyTransferFunction(X value, Y aggregate, String nodeId) {
         if (nodes.containsKey(nodeId)) {
             logger.info("Applying node " + nodeId + " transfer function.");
-            return nodes.get(nodeId).applyTransferFunction(toInput);
+            return nodes.get(nodeId).applyTransferFunction(value, aggregate);
         } else {
             logger.info("Node " + nodeId + " does not exist in network " + getNetworkId() + ". Transfer function not applied.");
             return null;
@@ -114,7 +122,7 @@ public class DataFeedNetwork<X,Y> extends AbstractNetwork {
             logger.info("DataFeedNetwork " + networkId + " Builder created");
         }
 
-        public Builder<X,Y> addNode(String nodeId, Function<X,X> transferFunction, BiFunction<X,Y,Y> aggregatingFunction, Function<X, Boolean> triggerFunction) {
+        public Builder<X,Y> addNode(String nodeId, Function<X,X> transferFunction, BiFunction<X,Y,Y> aggregatingFunction, BiFunction<X,Y,Boolean> triggerFunction) {
             if (idToNodeMap.containsKey(nodeId)) {
                 logger.info("Node " + nodeId + " already exists.");
             } else {

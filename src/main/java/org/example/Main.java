@@ -6,10 +6,15 @@ import java.util.function.Function;
 public class Main {
     public static void main(String[] args) {
 
-        Function<Double, Double> processingRule = X -> -X/2;
-        BiFunction<Double, Double, Double> aggregatingRule = Double::sum;
-        Function<Double, Boolean> triggerRule = X -> true;
-        DataFeedNetwork<Double, Double> network = new DataFeedNetwork.Builder<Double, Double>("0")
+        Function<Integer, Integer> processingRule = X -> {
+            if (X % 2 == 0) {
+                return X/2;
+            }
+            return 3*X+1;
+        };
+        BiFunction<Integer, Integer, Integer> aggregatingRule = Integer::sum;
+        BiFunction<Integer, Integer, Boolean> triggerRule = (X,Y) -> true;
+        DataFeedNetwork<Integer, Integer> network = new DataFeedNetwork.Builder<Integer, Integer>("0")
                 .addNode("A", processingRule, aggregatingRule, triggerRule)
                 .addNode("B", processingRule, aggregatingRule, triggerRule)
                 .addNode("C", processingRule, aggregatingRule, triggerRule)
@@ -18,7 +23,7 @@ public class Main {
                 .addConnection("B", "C")
                 .addConnection("C", "D")
                 .build();
-        Double test = network.evaluatePath("A", "G", 10d, 0d);
+        Integer test = network.evaluatePath("A", "D", 4, 0);
         System.out.println("boobies");
     }
 }

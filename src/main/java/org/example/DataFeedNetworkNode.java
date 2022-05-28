@@ -9,7 +9,7 @@ public class DataFeedNetworkNode<X,Y> extends AbstractNetworkNode {
 
     private final Function<X,X> transferFunction;
     private final BiFunction<X,Y,Y> aggregatingFunction;
-    private final Function<X,Boolean> triggerFunction;
+    private final BiFunction<X,Y,Boolean> triggerFunction;
     private final Logger logger = Logger.getLogger(DataFeedNetworkNode.class.getName());
 
     DataFeedNetworkNode(Builder<X,Y> builder) {
@@ -20,10 +20,10 @@ public class DataFeedNetworkNode<X,Y> extends AbstractNetworkNode {
         logger.info("DataFeedNetworkNode " + builder.nodeId + " created.");
     }
 
-    public X applyTransferFunction(X toInput) {
-        if (triggerFunction.apply(toInput)) {
+    public X applyTransferFunction(X value, Y aggregate) {
+        if (triggerFunction.apply(value, aggregate)) {
             logger.info("Applying node " + getNodeId() + " transfer function.");
-            return transferFunction.apply(toInput);
+            return transferFunction.apply(value);
         } else {
             logger.info("Node " + getNodeId() + " transfer function not triggered.");
             return null;
@@ -31,7 +31,7 @@ public class DataFeedNetworkNode<X,Y> extends AbstractNetworkNode {
     }
 
     public Y applyAggregatingFunction(X value, Y aggregate) {
-        if (triggerFunction.apply(value)) {
+        if (triggerFunction.apply(value, aggregate)) {
             logger.info("Applying node " + getNodeId() + " aggregating function.");
             return aggregatingFunction.apply(value, aggregate);
         } else {
@@ -60,9 +60,9 @@ public class DataFeedNetworkNode<X,Y> extends AbstractNetworkNode {
         private final String nodeId;
         private final Function<X,X> transferFunction;
         private final BiFunction<X,Y,Y> aggregatingFunction;
-        private final Function<X,Boolean> triggerFunction;
+        private final BiFunction<X,Y,Boolean> triggerFunction;
 
-        Builder(String nodeId, Function<X,X> transferFunction, BiFunction<X,Y,Y> aggregatingFunction, Function<X,Boolean> triggerFunction) {
+        Builder(String nodeId, Function<X,X> transferFunction, BiFunction<X,Y,Y> aggregatingFunction, BiFunction<X,Y,Boolean> triggerFunction) {
             this.nodeId = nodeId;
             this.transferFunction = transferFunction;
             this.aggregatingFunction = aggregatingFunction;
