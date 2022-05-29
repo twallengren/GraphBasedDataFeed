@@ -38,6 +38,10 @@ public class DataFeedNetworkNode<X,Y,Z> extends AbstractNetworkNode {
     }
 
     public DataFeedDataPacket<X,Y> processPacket(DataFeedDataPacket<X,Y> dataFeedDataPacket) {
+        if (dataFeedDataPacket == null) {
+            logger.info("Data feed packet null. Nothing processed.");
+            return null;
+        }
         X value = dataFeedDataPacket.getValue();
         Y aggregate = dataFeedDataPacket.getAggregate();
         if (triggerFunction.apply(value, aggregate)) {

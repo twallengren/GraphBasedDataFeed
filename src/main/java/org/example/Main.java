@@ -10,7 +10,7 @@ public class Main {
 
         Function<Integer,Integer> preProcessingRule = X -> {
             if (X % 2 == 0) {
-                return -X/2;
+                return X/2;
             }
             return 3*X+1;
         };
@@ -18,9 +18,9 @@ public class Main {
         BiFunction<String,String,String> aggregatingRule = (Z,Y) -> {
             return Y + " " + Z;
         };
-        BiFunction<Integer,String,Boolean> triggerRule = (X,Y) -> true;
+        BiFunction<Integer,String,Boolean> triggerRule = (X,Y) -> X != 1;
 
-        int numOfNodes = 10;
+        int numOfNodes = 500;
         List<String> nodeIds = new ArrayList<>();
         for (int n = 0; n < numOfNodes; n++) {
             nodeIds.add(String.valueOf(n));

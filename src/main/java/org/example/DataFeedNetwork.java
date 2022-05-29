@@ -51,9 +51,14 @@ public class DataFeedNetwork<X,Y,Z> extends AbstractNetwork {
             logger.info("Node " + fromNode + " input: " + dataFeedDataPacket);
             DataFeedNetworkNode<X,Y,?> networkNode = getNode(fromNode);
             dataFeedDataPacket = networkNode.processPacket(dataFeedDataPacket);
+            if (dataFeedDataPacket == null) {
+                logger.info("Data feed packet not processed by node " + fromNode);
+                return null;
+            }
             for (String nodeId : networkTopology.getNodesListeningTo(fromNode)) {
                 if (nodeId.equals(toNode)) {
                     networkNode = getNode(nodeId);
+                    logger.info("Node " + nodeId + " input: " + dataFeedDataPacket);
                     return networkNode.processPacket(dataFeedDataPacket);
                 }
                 return evaluatePath(nodeId, toNode, dataFeedDataPacket);
