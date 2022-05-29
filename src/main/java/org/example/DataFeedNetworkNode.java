@@ -5,37 +5,50 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-public class DataFeedNetworkNode<X,Y> extends AbstractNetworkNode {
+public class DataFeedNetworkNode<X,Y,Z> extends AbstractNetworkNode {
 
-    private final Function<X,X> transferFunction;
-    private final BiFunction<X,Y,Y> aggregatingFunction;
+    private final Function<X,X> preProcessingFunction;
+    private final Function<X,Z> dataTransferFunction;
+    private final BiFunction<Z,Y,Y> aggregatingFunction;
     private final BiFunction<X,Y,Boolean> triggerFunction;
     private final Logger logger = Logger.getLogger(DataFeedNetworkNode.class.getName());
 
-    DataFeedNetworkNode(Builder<X,Y> builder) {
+    DataFeedNetworkNode(Builder<X,Y,Z> builder) {
         super(builder.nodeId);
-        this.transferFunction = builder.transferFunction;
+        this.preProcessingFunction = builder.preProcessingFunction;
+        this.dataTransferFunction = builder.dataTransferFunction;
         this.aggregatingFunction = builder.aggregatingFunction;
         this.triggerFunction = builder.triggerFunction;
         logger.info("DataFeedNetworkNode " + builder.nodeId + " created.");
     }
 
-    public X applyTransferFunction(X value, Y aggregate) {
-        if (triggerFunction.apply(value, aggregate)) {
-            logger.info("Applying node " + getNodeId() + " transfer function.");
-            return transferFunction.apply(value);
-        } else {
-            logger.info("Node " + getNodeId() + " transfer function not triggered.");
-            return null;
-        }
+    public X applyPreProcessingFunction(X input) {
+        logger.info("Applying node " + getNodeId() + " pre-processing function.");
+        return preProcessingFunction.apply(input);
     }
 
-    public Y applyAggregatingFunction(X value, Y aggregate) {
+    public Z applyDataTransferFunction(X input) {
+        logger.info("Applying node " + getNodeId() + " data transfer function.");
+        return dataTransferFunction.apply(input);
+    }
+
+    public Y applyAggregatingFunction(Z value, Y aggregate) {
+        logger.info("Applying node " + getNodeId() + " aggregating function.");
+        return aggregatingFunction.apply(value, aggregate);
+    }
+
+    public DataFeedDataPacket<X,Y> processPacket(DataFeedDataPacket<X,Y> dataFeedDataPacket) {
+        X value = dataFeedDataPacket.getValue();
+        Y aggregate = dataFeedDataPacket.getAggregate();
         if (triggerFunction.apply(value, aggregate)) {
-            logger.info("Applying node " + getNodeId() + " aggregating function.");
-            return aggregatingFunction.apply(value, aggregate);
+            X processedValue = applyPreProcessingFunction(value);
+            Z transformedValue = applyDataTransferFunction(processedValue);
+            Y aggregatedValue = applyAggregatingFunction(transformedValue, aggregate);
+            dataFeedDataPacket.setValue(processedValue);
+            dataFeedDataPacket.setAggregate(aggregatedValue);
+            return dataFeedDataPacket;
         } else {
-            logger.info("Node " + getNodeId() + " aggregating function not triggered.");
+            logger.info("Node " + getNodeId() + " not triggered by data packet " + dataFeedDataPacket);
             return null;
         }
     }
@@ -44,9 +57,11 @@ public class DataFeedNetworkNode<X,Y> extends AbstractNetworkNode {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        DataFeedNetworkNode<?,?> that = (DataFeedNetworkNode<?,?>) o;
+        DataFeedNetworkNode<?,?,?> that = (DataFeedNetworkNode<?,?,?>) o;
         return getNodeId().equals(that.getNodeId())
-                && transferFunction.equals(that.transferFunction)
+                && preProcessingFunction.equals(that.preProcessingFunction)
+                && dataTransferFunction.equals(that.dataTransferFunction)
+                && aggregatingFunction.equals(that.aggregatingFunction)
                 && triggerFunction.equals(that.triggerFunction);
     }
 
@@ -55,21 +70,23 @@ public class DataFeedNetworkNode<X,Y> extends AbstractNetworkNode {
         return Objects.hash(getNodeId());
     }
 
-    public static class Builder<X,Y> {
+    public static class Builder<X,Y,Z> {
 
         private final String nodeId;
-        private final Function<X,X> transferFunction;
-        private final BiFunction<X,Y,Y> aggregatingFunction;
+        private final Function<X,X> preProcessingFunction;
+        private final Function<X,Z> dataTransferFunction;
+        private final BiFunction<Z,Y,Y> aggregatingFunction;
         private final BiFunction<X,Y,Boolean> triggerFunction;
 
-        Builder(String nodeId, Function<X,X> transferFunction, BiFunction<X,Y,Y> aggregatingFunction, BiFunction<X,Y,Boolean> triggerFunction) {
+        Builder(String nodeId, Function<X,X> preProcessingFunction, Function<X,Z> dataTransferFunction, BiFunction<Z,Y,Y> aggregatingFunction, BiFunction<X,Y,Boolean> triggerFunction) {
             this.nodeId = nodeId;
-            this.transferFunction = transferFunction;
+            this.preProcessingFunction = preProcessingFunction;
+            this.dataTransferFunction = dataTransferFunction;
             this.aggregatingFunction = aggregatingFunction;
             this.triggerFunction = triggerFunction;
         }
 
-        public DataFeedNetworkNode<X,Y> build() {
+        public DataFeedNetworkNode<X,Y,Z> build() {
             return new DataFeedNetworkNode<>(this);
         }
     }
