@@ -25,14 +25,14 @@ public class Main {
         for (int n = 0; n < numOfNodes; n++) {
             nodeIds.add(String.valueOf(n));
         }
-        DataFeedNetwork.Builder<Integer,String,String> networkBuilder = new DataFeedNetwork.Builder<>("0");
+        DataFeedNetwork.Builder<Integer,String> networkBuilder = new DataFeedNetwork.Builder<>("0");
         for (int n = 0; n < numOfNodes; n++) {
             networkBuilder.addNode(nodeIds.get(n), preProcessingRule, dataTransferRule, aggregatingRule, triggerRule);
         }
         for (int n = 0; n < numOfNodes-1; n++) {
             networkBuilder.addConnection(String.valueOf(n), String.valueOf(n+1));
         }
-        DataFeedNetwork<Integer,String,String> network = networkBuilder.build();
+        DataFeedNetwork<Integer,String> network = networkBuilder.build();
         DataFeedDataPacket<Integer,String> dataFeedDataPacket = new DataFeedDataPacket<>(27, "27");
         DataFeedDataPacket<Integer,String> test = network.evaluatePath(nodeIds.get(0), nodeIds.get(numOfNodes-1), dataFeedDataPacket);
         System.out.println("Final value is: " + test);
