@@ -8,42 +8,61 @@ import java.util.function.Function;
 public class Main {
     public static void main(String[] args) {
         int numOfNodes = 500;
-        DataFeedNetwork<Integer,String> network = getCollatzNetwork("0", 100);
-        DataFeedDataPacket<Integer,String> dataFeedDataPacket = new DataFeedDataPacket<>(27, "27");
-        DataFeedDataPacket<Integer,String> test = network.evaluatePath("0", "" + (numOfNodes - 1), dataFeedDataPacket);
-        System.out.println("Final value is: " + test);
+        DataFeedNetwork<Integer,String> collatzNetwork = getCollatzNetwork("0", 100);
+        DataFeedDataPacket<Integer,String> collatzDataFeedDataPacket = new DataFeedDataPacket<>(27, "27");
+        DataFeedDataPacket<Integer,String> testCollatz = collatzNetwork.evaluatePath("0", "" + (numOfNodes - 1), collatzDataFeedDataPacket);
+        System.out.println("Final value is: " + testCollatz);
+
+        DataFeedNetwork<Double,Double> integratorNetwork = integrator("1", Function.identity(), 0.1, numOfNodes);
+        DataFeedDataPacket<Double,Double> integratorDataFeedDataPacket = new DataFeedDataPacket<>(0.0, 0.0);
+        DataFeedDataPacket<Double,Double> testIntegrator = integratorNetwork.evaluatePath("0", "" + (numOfNodes - 1), integratorDataFeedDataPacket);
+        System.out.println("Final value is: " + testIntegrator);
+    }
+
+    private static DataFeedNetwork<Double,Double> integrator(String networkId, Function<Double,Double> function, Double dA, int numOfSteps) {
+        Function<Double,Double> preProcessingRule = A -> A+dA;
+        Function<Double,Double> dataTransferRuleA = A -> dA*(function.apply(A-dA) + function.apply(A))/2;
+        BiFunction<Double,Double,Double> aggregatingRule = Double::sum;
+        Function<Double,Double> dataTransferRuleB = Function.identity();
+        BiFunction<Double,Double,Double> feedbackRule = (A,Y) -> A;
+        BiFunction<Double,Double,Boolean> triggerRule = (A,B) -> true;
+        return getHomogeneousNetworkFromFunctions(networkId, numOfSteps, preProcessingRule, dataTransferRuleA, aggregatingRule, dataTransferRuleB, feedbackRule, triggerRule);
     }
 
     private static DataFeedNetwork<Integer,String> getCollatzNetwork(String networkId, int numOfNodes) {
-        Function<Integer,Integer> preProcessingRule = X -> {
-            if (X % 2 == 0) {
-                return X/2;
+        Function<Integer,Integer> preProcessingRule = A -> {
+            if (A % 2 == 0) {
+                return A/2;
             }
-            return 3*X+1;
+            return 3*A+1;
         };
-        Function<Integer,String> dataTransferRule = String::valueOf;
-        BiFunction<String,String,String> aggregatingRule = (Z,Y) -> {
-            return Y + " " + Z;
+        Function<Integer,String> dataTransferRuleA = String::valueOf;
+        BiFunction<String,String,String> aggregatingRule = (B,X) -> {
+            return B + " " + X;
         };
-        BiFunction<Integer,String,Boolean> triggerRule = (X,Y) -> X != 1;
-        return getHomogeneousNetworkFromFunctions(networkId, numOfNodes, preProcessingRule, dataTransferRule, aggregatingRule, triggerRule);
+        Function<String,String> dataTransferRuleB = B -> "";
+        BiFunction<Integer,String,Integer> feedbackRule = (A,Y) -> A;
+        BiFunction<Integer,String,Boolean> triggerRule = (A,B) -> A != 1;
+        return getHomogeneousNetworkFromFunctions(networkId, numOfNodes, preProcessingRule, dataTransferRuleA, aggregatingRule, dataTransferRuleB, feedbackRule, triggerRule);
     }
 
-    private static <X,Y,Z> DataFeedNetwork<X,Y> getHomogeneousNetworkFromFunctions(
+    private static <A,X,B,Y> DataFeedNetwork<A,B> getHomogeneousNetworkFromFunctions(
             String networkId,
             int numOfNodes,
-            Function<X,X> preProcessingRule,
-            Function<X,Z> dataTransferRule,
-            BiFunction<Z,Y,Y> aggregatingRule,
-            BiFunction<X,Y,Boolean> triggerRule) {
+            Function<A,A> preProcessingRule,
+            Function<A,X> dataTransferRuleA,
+            BiFunction<B,X,B> aggregatingRule,
+            Function<B,Y> dataTransferRuleB,
+            BiFunction<A,Y,A> feedbackRule,
+            BiFunction<A,B,Boolean> triggerRule) {
 
         List<String> nodeIds = new ArrayList<>();
         for (int n = 0; n < numOfNodes; n++) {
             nodeIds.add(String.valueOf(n));
         }
-        DataFeedNetwork.Builder<X,Y> networkBuilder = new DataFeedNetwork.Builder<>(networkId);
+        DataFeedNetwork.Builder<A,B> networkBuilder = new DataFeedNetwork.Builder<>(networkId);
         for (int n = 0; n < numOfNodes; n++) {
-            networkBuilder.addNode(nodeIds.get(n), preProcessingRule, dataTransferRule, aggregatingRule, triggerRule);
+            networkBuilder.addNode(nodeIds.get(n), preProcessingRule, dataTransferRuleA, aggregatingRule, dataTransferRuleB, feedbackRule, triggerRule);
         }
         for (int n = 0; n < numOfNodes-1; n++) {
             networkBuilder.addConnection(String.valueOf(n), String.valueOf(n+1));

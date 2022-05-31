@@ -5,50 +5,66 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-public class DataFeedNetworkNode<X,Y,Z> extends AbstractNetworkNode {
+public class DataFeedNetworkNode<A,X,B,Y> extends AbstractNetworkNode {
 
-    private final Function<X,X> preProcessingFunction;
-    private final Function<X,Z> dataTransferFunction;
-    private final BiFunction<Z,Y,Y> aggregatingFunction;
-    private final BiFunction<X,Y,Boolean> triggerFunction;
+    private final Function<A,A> preProcessingFunction;
+    private final Function<A,X> dataTransferFunctionA;
+    private final BiFunction<B,X,B> aggregatingFunction;
+    private final Function<B,Y> dataTransferFunctionB;
+    private final BiFunction<A,Y,A> feedbackFunction;
+    private final BiFunction<A,B,Boolean> triggerFunction;
     private final Logger logger = Logger.getLogger(DataFeedNetworkNode.class.getName());
 
-    DataFeedNetworkNode(Builder<X,Y,Z> builder) {
+    DataFeedNetworkNode(Builder<A,X,B,Y> builder) {
         super(builder.nodeId);
         this.preProcessingFunction = builder.preProcessingFunction;
-        this.dataTransferFunction = builder.dataTransferFunction;
+        this.dataTransferFunctionA = builder.dataTransferFunctionA;
         this.aggregatingFunction = builder.aggregatingFunction;
+        this.dataTransferFunctionB = builder.dataTransferFunctionB;
+        this.feedbackFunction = builder.feedbackFunction;
         this.triggerFunction = builder.triggerFunction;
         logger.info("DataFeedNetworkNode " + builder.nodeId + " created.");
     }
 
-    public X applyPreProcessingFunction(X input) {
+    public A applyPreProcessingFunction(A input) {
         logger.info("Applying node " + getNodeId() + " pre-processing function.");
         return preProcessingFunction.apply(input);
     }
 
-    public Z applyDataTransferFunction(X input) {
-        logger.info("Applying node " + getNodeId() + " data transfer function.");
-        return dataTransferFunction.apply(input);
+    public X applyDataTransferFunctionA(A input) {
+        logger.info("Applying node " + getNodeId() + " data transfer function A.");
+        return dataTransferFunctionA.apply(input);
     }
 
-    public Y applyAggregatingFunction(Z value, Y aggregate) {
+    public B applyAggregatingFunction(B aggregate, X value) {
         logger.info("Applying node " + getNodeId() + " aggregating function.");
-        return aggregatingFunction.apply(value, aggregate);
+        return aggregatingFunction.apply(aggregate, value);
     }
 
-    public DataFeedDataPacket<X,Y> processPacket(DataFeedDataPacket<X,Y> dataFeedDataPacket) {
+    public Y applyDataTransferFunctionB(B input) {
+        logger.info("Applying node " + getNodeId() + " data transfer function B.");
+        return dataTransferFunctionB.apply(input);
+    }
+
+    public A applyFeedbackFunction(A input, Y feedback) {
+        logger.info("Applying node " + getNodeId() + " feedback function.");
+        return feedbackFunction.apply(input, feedback);
+    }
+
+    public DataFeedDataPacket<A,B> processPacket(DataFeedDataPacket<A,B> dataFeedDataPacket) {
         if (dataFeedDataPacket == null) {
             logger.info("Data feed packet null. Nothing processed.");
             return null;
         }
-        X value = dataFeedDataPacket.getValue();
-        Y aggregate = dataFeedDataPacket.getAggregate();
+        A value = dataFeedDataPacket.getValue();
+        B aggregate = dataFeedDataPacket.getAggregate();
         if (triggerFunction.apply(value, aggregate)) {
-            X processedValue = applyPreProcessingFunction(value);
-            Z transformedValue = applyDataTransferFunction(processedValue);
-            Y aggregatedValue = applyAggregatingFunction(transformedValue, aggregate);
-            dataFeedDataPacket.setValue(processedValue);
+            A processedValue = applyPreProcessingFunction(value);
+            X transformedValueA = applyDataTransferFunctionA(processedValue);
+            B aggregatedValue = applyAggregatingFunction(aggregate, transformedValueA);
+            Y transformedValueB = applyDataTransferFunctionB(aggregatedValue);
+            A feedbackValue = applyFeedbackFunction(processedValue, transformedValueB);
+            dataFeedDataPacket.setValue(feedbackValue);
             dataFeedDataPacket.setAggregate(aggregatedValue);
             return dataFeedDataPacket;
         } else {
@@ -61,11 +77,13 @@ public class DataFeedNetworkNode<X,Y,Z> extends AbstractNetworkNode {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        DataFeedNetworkNode<?,?,?> that = (DataFeedNetworkNode<?,?,?>) o;
+        DataFeedNetworkNode<?,?,?,?> that = (DataFeedNetworkNode<?,?,?,?>) o;
         return getNodeId().equals(that.getNodeId())
                 && preProcessingFunction.equals(that.preProcessingFunction)
-                && dataTransferFunction.equals(that.dataTransferFunction)
+                && dataTransferFunctionA.equals(that.dataTransferFunctionA)
                 && aggregatingFunction.equals(that.aggregatingFunction)
+                && dataTransferFunctionB.equals(that.dataTransferFunctionB)
+                && feedbackFunction.equals(that.feedbackFunction)
                 && triggerFunction.equals(that.triggerFunction);
     }
 
@@ -74,23 +92,27 @@ public class DataFeedNetworkNode<X,Y,Z> extends AbstractNetworkNode {
         return Objects.hash(getNodeId());
     }
 
-    public static class Builder<X,Y,Z> {
+    public static class Builder<A,X,B,Y> {
 
         private final String nodeId;
-        private final Function<X,X> preProcessingFunction;
-        private final Function<X,Z> dataTransferFunction;
-        private final BiFunction<Z,Y,Y> aggregatingFunction;
-        private final BiFunction<X,Y,Boolean> triggerFunction;
+        private final Function<A,A> preProcessingFunction;
+        private final Function<A,X> dataTransferFunctionA;
+        private final BiFunction<B,X,B> aggregatingFunction;
+        private final Function<B,Y> dataTransferFunctionB;
+        private final BiFunction<A,Y,A> feedbackFunction;
+        private final BiFunction<A,B,Boolean> triggerFunction;
 
-        Builder(String nodeId, Function<X,X> preProcessingFunction, Function<X,Z> dataTransferFunction, BiFunction<Z,Y,Y> aggregatingFunction, BiFunction<X,Y,Boolean> triggerFunction) {
+        Builder(String nodeId, Function<A, A> preProcessingFunction, Function<A, X> dataTransferFunctionA, BiFunction<B,X,B> aggregatingFunction, Function<B,Y> dataTransferFunctionB, BiFunction<A,Y,A> feedbackFunction, BiFunction<A,B,Boolean> triggerFunction) {
             this.nodeId = nodeId;
             this.preProcessingFunction = preProcessingFunction;
-            this.dataTransferFunction = dataTransferFunction;
+            this.dataTransferFunctionA = dataTransferFunctionA;
             this.aggregatingFunction = aggregatingFunction;
+            this.dataTransferFunctionB = dataTransferFunctionB;
+            this.feedbackFunction = feedbackFunction;
             this.triggerFunction = triggerFunction;
         }
 
-        public DataFeedNetworkNode<X,Y,Z> build() {
+        public DataFeedNetworkNode<A,X,B,Y> build() {
             return new DataFeedNetworkNode<>(this);
         }
     }
