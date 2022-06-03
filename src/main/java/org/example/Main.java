@@ -101,7 +101,7 @@ public class Main {
             BiFunction<A,B,Boolean> triggerRule) {
         Function<B,B> dataTransferRuleB = Function.identity();
         BiFunction<A,B,A> feedbackRule = (A,B) -> A;
-        return getCyclicHomogeneousNetwork(networkId, preProcessingRule, dataTransferRuleA, aggregatingRule,dataTransferRuleB, feedbackRule, triggerRule);
+        return getCyclicHomogeneousNetwork(networkId, preProcessingRule, dataTransferRuleA, aggregatingRule, dataTransferRuleB, feedbackRule, triggerRule);
     }
 
     private static <A,X,B,Y> DataFeedNetwork<A,B> getCyclicHomogeneousNetwork(
@@ -113,8 +113,6 @@ public class Main {
             BiFunction<A,Y,A> feedbackRule,
             BiFunction<A,B,Boolean> triggerRule) {
         DataFeedNetwork.Builder<A,B> networkBuilder = new DataFeedNetwork.Builder<>(networkId);
-        networkBuilder.addNode(networkId, preProcessingRule, dataTransferRuleA, aggregatingRule, dataTransferRuleB, feedbackRule, triggerRule);
-        networkBuilder.addConnection(networkId, networkId);
-        return networkBuilder.build();
+        return networkBuilder.buildCyclicHomogeneousNetwork(preProcessingRule, dataTransferRuleA, aggregatingRule, dataTransferRuleB, feedbackRule, triggerRule);
     }
 }

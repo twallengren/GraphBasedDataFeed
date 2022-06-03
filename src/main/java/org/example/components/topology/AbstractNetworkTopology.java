@@ -8,7 +8,6 @@ abstract class AbstractNetworkTopology implements NetworkTopology {
     private final String networkId;
     private Set<String> nodes;
     private Map<String, Set<String>> nodeAToNodeBMap;
-    private Set<List<String>> paths;
     private final Boolean directed;
 
     private final Logger logger = Logger.getLogger(AbstractNetworkTopology.class.getName());
@@ -17,7 +16,6 @@ abstract class AbstractNetworkTopology implements NetworkTopology {
         this.networkId = networkId;
         this.nodes = new HashSet<>();
         this.nodeAToNodeBMap = new HashMap<>();
-        this.paths = new HashSet<>();
         this.directed = directed;
     }
 
@@ -34,8 +32,6 @@ abstract class AbstractNetworkTopology implements NetworkTopology {
 
     @Override
     public void addEdge(String fromNode, String toNode) {
-
-        // if fromNode is already connected to other nodes, we are either duplicating an edge or creating a new branch
         if (nodeAToNodeBMap.containsKey(fromNode)) {
             Set<String> toNodes = nodeAToNodeBMap.get(fromNode);
             if (toNodes.contains(toNode)) {
@@ -49,5 +45,7 @@ abstract class AbstractNetworkTopology implements NetworkTopology {
             nodeAToNodeBMap.put(fromNode, new HashSet<>(Collections.singleton(toNode)));
             logger.info("Edge added from " + fromNode + " to " + toNode + ".");
         }
+        nodes.add(fromNode);
+        nodes.add(toNode);
     }
 }

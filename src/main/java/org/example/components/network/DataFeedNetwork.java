@@ -139,5 +139,17 @@ public class DataFeedNetwork<A,B> extends AbstractNetwork {
             logger.info("Building DataFeedNetwork...");
             return new DataFeedNetwork<>(this);
         }
+
+        public <X,Y> DataFeedNetwork<A,B> buildCyclicHomogeneousNetwork(
+                Function<A,A> preProcessingFunction,
+                Function<A,X> dataTransferFunctionA,
+                BiFunction<B,X,B> aggregatingFunction,
+                Function<B,Y> dataTransferFunctionB,
+                BiFunction<A,Y,A> feedbackFunction,
+                BiFunction<A,B,Boolean> triggerFunction) {
+            addNode(networkId, preProcessingFunction, dataTransferFunctionA, aggregatingFunction, dataTransferFunctionB, feedbackFunction, triggerFunction);
+            addConnection(networkId, networkId);
+            return build();
+        }
     }
 }
