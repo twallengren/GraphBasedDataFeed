@@ -1,6 +1,5 @@
 package org.example.examples.collatz;
 
-import org.example.Main;
 import org.example.components.network.DataFeedNetwork;
 
 import java.util.logging.Logger;

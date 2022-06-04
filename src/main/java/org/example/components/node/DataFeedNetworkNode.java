@@ -4,8 +4,6 @@ import org.example.components.data.DataFeedDataPacket;
 import org.example.components.data.DataFeedFunctions;
 
 import java.util.Objects;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.logging.Logger;
 
 public class DataFeedNetworkNode<A,X,B,Y> extends AbstractNetworkNode {
@@ -63,11 +61,10 @@ public class DataFeedNetworkNode<A,X,B,Y> extends AbstractNetworkNode {
             A feedbackValue = applyFeedbackFunction(processedValue, transformedValueB);
             dataFeedDataPacket.setValueA(feedbackValue);
             dataFeedDataPacket.setValueB(aggregatedValue);
-            return dataFeedDataPacket;
         } else {
             logger.info("Node " + getNodeId() + " not triggered by data packet " + dataFeedDataPacket);
-            return dataFeedDataPacket;
         }
+        return dataFeedDataPacket;
     }
 
     @Override
