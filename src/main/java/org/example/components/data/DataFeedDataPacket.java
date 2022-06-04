@@ -1,33 +1,33 @@
 package org.example.components.data;
 
-public class DataFeedDataPacket<X,Y> {
+public class DataFeedDataPacket<A,B> {
 
-    X value;
-    Y aggregate;
+    A valueA;
+    B valueB;
 
-    public DataFeedDataPacket(X value, Y aggregate) {
-        this.value = value;
-        this.aggregate = aggregate;
+    public DataFeedDataPacket(A value, B aggregate) {
+        this.valueA = value;
+        this.valueB = aggregate;
     }
 
-    public X getValue() {
-        return value;
+    public A getValueA() {
+        return valueA;
     }
 
-    public void setValue(X value) {
-        this.value = value;
+    public void setValueA(A valueA) {
+        this.valueA = valueA;
     }
 
-    public Y getAggregate() {
-        return aggregate;
+    public B getValueB() {
+        return valueB;
     }
 
-    public void setAggregate(Y aggregate) {
-        this.aggregate = aggregate;
+    public void setValueB(B valueB) {
+        this.valueB = valueB;
     }
 
     @Override
     public String toString() {
-        return "DataFeedDataPacket(value: " + value + ", aggregate: " + aggregate + ")";
+        return "DataFeedDataPacket(valueA: " + valueA + ", valueB: " + valueB + ")";
     }
 }

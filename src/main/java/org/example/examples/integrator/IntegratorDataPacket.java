@@ -9,15 +9,15 @@ public class IntegratorDataPacket extends DataFeedDataPacket<IntegratorDataA,Int
     }
 
     private Double getLowerBound() {
-        return getValue().getLowerBound();
+        return getValueA().getLowerBound();
     }
 
     private Double getUpperBound() {
-        return getValue().getUpperBound();
+        return getValueA().getUpperBound();
     }
 
     public Double getIntegralValue() {
-        return getAggregate().getIntegralValue();
+        return getValueB().getIntegralValue();
     }
 
     @Override
