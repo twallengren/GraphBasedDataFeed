@@ -59,9 +59,13 @@ public class DataFeedNetwork<A,B> extends AbstractNetwork {
         if (networkTopology.isProducerNode(fromNode)) {
             logger.info("Node " + fromNode + " input: " + dataFeedDataPacket);
             DataFeedNetworkNode<A,?,B,?> networkNode = getNode(fromNode);
+            if (!networkNode.applyTriggerFunction(dataFeedDataPacket)) {
+                logger.info("Node " + fromNode + " not triggered by input data.");
+                return dataFeedDataPacket;
+            }
             dataFeedDataPacket = networkNode.processPacket(dataFeedDataPacket);
             if (dataFeedDataPacket == null) {
-                logger.info("Node " + fromNode + " output is null. Node not triggered by input data.");
+                logger.info("Node " + fromNode + " output is null.");
                 return null;
             }
             logger.info("Node " + fromNode + " output: " + dataFeedDataPacket);

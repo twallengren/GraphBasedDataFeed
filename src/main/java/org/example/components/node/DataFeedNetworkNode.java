@@ -53,6 +53,11 @@ public class DataFeedNetworkNode<A,X,B,Y> extends AbstractNetworkNode {
         return feedbackFunction.apply(input, feedback);
     }
 
+    public Boolean applyTriggerFunction(DataFeedDataPacket<A,B> dataFeedDataPacket) {
+        logger.info("Applying node " + getNodeId() + " trigger function.");
+        return triggerFunction.apply(dataFeedDataPacket.getValue(), dataFeedDataPacket.getAggregate());
+    }
+
     public DataFeedDataPacket<A,B> processPacket(DataFeedDataPacket<A,B> dataFeedDataPacket) {
         if (dataFeedDataPacket == null) {
             logger.info("Data feed packet null. Nothing processed.");
@@ -71,7 +76,7 @@ public class DataFeedNetworkNode<A,X,B,Y> extends AbstractNetworkNode {
             return dataFeedDataPacket;
         } else {
             logger.info("Node " + getNodeId() + " not triggered by data packet " + dataFeedDataPacket);
-            return null;
+            return dataFeedDataPacket;
         }
     }
 

@@ -4,46 +4,50 @@ import org.example.components.data.DataFeedDataPacket;
 
 import java.util.function.Function;
 
-public class IntegratorDataA extends DataFeedDataPacket<DataFeedDataPacket<Double,Double>,DataFeedDataPacket<Function<Double,Double>,Double>> {
+public class IntegratorDataA {
+
+    private Double lowerBound;
+    private Double upperBound;
+    private Function<Double,Double> function;
+    private Double stepSize;
 
     public IntegratorDataA() {
-        super(new DataFeedDataPacket<>(0.0, 0.0), new DataFeedDataPacket<>(Function.identity(), 1d));
     }
 
     public Double getLowerBound() {
-        return getValue().getValue();
+        return lowerBound;
     }
 
     public void setLowerBound(Double lowerBound) {
-        getValue().setValue(lowerBound);
+        this.lowerBound = lowerBound;
     };
 
     public Double getUpperBound() {
-        return getValue().getAggregate();
+        return upperBound;
     }
 
     public void setUpperBound(Double upperBound) {
-        getValue().setAggregate(upperBound);
+        this.upperBound = upperBound;
     }
 
     public Function<Double,Double> getFunction() {
-        return getAggregate().getValue();
+        return function;
     }
 
     public void setFunction(Function<Double,Double> function) {
-        getAggregate().setValue(function);
+        this.function = function;
     }
 
     public Double getStepSize() {
-        return getAggregate().getAggregate();
+        return stepSize;
     }
 
     public void setStepSize(Double stepSize) {
-        getAggregate().setAggregate(stepSize);
+        this.stepSize = stepSize;
     }
 
     @Override
     public String toString() {
-        return "IntegratorDataA(lowerBound: " + getLowerBound() + ", upperBound: " + getUpperBound() + ")";
+        return "IntegratorDataA(lowerBound: " + upperBound + ", upperBound: " + lowerBound + ", stepSize: " + stepSize + ")";
     }
 }

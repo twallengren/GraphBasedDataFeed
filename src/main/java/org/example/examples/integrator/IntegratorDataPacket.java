@@ -16,12 +16,12 @@ public class IntegratorDataPacket extends DataFeedDataPacket<IntegratorDataA,Int
         return getValue().getUpperBound();
     }
 
-    public Double getIntegralAggregate() {
-        return getAggregate().getAggregate();
+    public Double getIntegralValue() {
+        return getAggregate().getIntegralValue();
     }
 
     @Override
     public String toString() {
-        return "IntegratorDataPacket(lowerBound: " + getLowerBound() + ", upperBound: " + getUpperBound() + ", integralValue: " + getIntegralAggregate() + ")";
+        return "IntegratorDataPacket(lowerBound: " + getLowerBound() + ", upperBound: " + getUpperBound() + ", integralValue: " + getIntegralValue() + ")";
     }
 }
