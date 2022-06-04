@@ -7,6 +7,8 @@ abstract class AbstractNetworkTopology implements NetworkTopology {
 
     private final String networkId;
     private Set<String> nodes;
+    private Set<String> edges;
+    private Map<String, Set<String>> nodeToEdgesMap;
     private Map<String, Set<String>> nodeAToNodeBMap;
     private final Boolean directed;
 
@@ -15,6 +17,8 @@ abstract class AbstractNetworkTopology implements NetworkTopology {
     AbstractNetworkTopology(String networkId, boolean directed) {
         this.networkId = networkId;
         this.nodes = new HashSet<>();
+        this.edges = new HashSet<>();
+        this.nodeToEdgesMap = new HashMap<>();
         this.nodeAToNodeBMap = new HashMap<>();
         this.directed = directed;
     }
@@ -37,7 +41,7 @@ abstract class AbstractNetworkTopology implements NetworkTopology {
             if (toNodes.contains(toNode)) {
                 logger.info("Edge from " + fromNode + " to " + toNode + " already exists.");
             } else {
-                toNodes.add(toNode);
+                edges.add(fromNode + "_" + toNode);
                 logger.info("Edge added from " + fromNode + " to " + toNode + ".");
             }
         } else {
@@ -45,7 +49,17 @@ abstract class AbstractNetworkTopology implements NetworkTopology {
             nodeAToNodeBMap.put(fromNode, new HashSet<>(Collections.singleton(toNode)));
             logger.info("Edge added from " + fromNode + " to " + toNode + ".");
         }
+        String edgeId = fromNode + "_" + toNode;
+        if (nodes.contains(fromNode)) {
+            Set<String> nodeEdgesA = nodeToEdgesMap.get(fromNode);
+            nodeEdgesA.add(edgeId);
+        }
+        if (nodes.contains(toNode)) {
+            Set<String> nodeEdgesB = nodeToEdgesMap.get(toNode);
+            nodeEdgesB.add(edgeId);
+        }
         nodes.add(fromNode);
         nodes.add(toNode);
+        edges.add(edgeId);
     }
 }

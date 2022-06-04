@@ -1,7 +1,7 @@
 package org.example;
 
-import org.example.components.data.DataFeedDataPacket;
 import org.example.components.network.DataFeedNetwork;
+import org.example.examples.integrator.IntegratorNetwork;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,36 +9,12 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class Main {
+
+    private static final IntegratorNetwork integratorNetwork = new IntegratorNetwork.Builder("0").build();
+
     public static void main(String[] args) {
-        int numOfNodes = 5;
-        DataFeedNetwork<Integer,String> collatzNetwork = getCollatzNetwork("0");
-        DataFeedDataPacket<Integer,String> collatzDataFeedDataPacket = new DataFeedDataPacket<>(27, "27");
-        DataFeedDataPacket<Integer,String> testCollatz = collatzNetwork.evaluatePath("0", "-1", collatzDataFeedDataPacket);
-        System.out.println("Final value is: " + testCollatz);
-
-        DataFeedNetwork<DataFeedDataPacket<Double,Double>,Double> integratorNetwork = integrator("0", Math::cos, 0.1);
-        DataFeedDataPacket<DataFeedDataPacket<Double,Double>,Double> integratorDataFeedDataPacket =
-                new DataFeedDataPacket<>(new DataFeedDataPacket<>(0.0, 10.0), 0.0);
-        DataFeedDataPacket<DataFeedDataPacket<Double,Double>,Double> testIntegrator = integratorNetwork.evaluatePath("0", "-1", integratorDataFeedDataPacket);
-        System.out.println("Final value is: " + testIntegrator);
-    }
-
-    private static DataFeedNetwork<DataFeedDataPacket<Double,Double>,Double> integrator(String networkId, Function<Double,Double> function, Double dA) {
-        Function<DataFeedDataPacket<Double,Double>,DataFeedDataPacket<Double,Double>> preProcessingRule = Function.identity();
-        Function<DataFeedDataPacket<Double,Double>,Double> dataTransferRuleA = A -> {
-            // integrate using trapezoidal rule
-            return dA*(function.apply(A.getValue()+dA) + function.apply(A.getValue()))/2;
-        };
-        BiFunction<Double,Double,Double> aggregatingRule = Double::sum;
-        Function<Double,Double> dataTransferRuleB = Function.identity();
-        BiFunction<DataFeedDataPacket<Double,Double>,Double,DataFeedDataPacket<Double,Double>> feedbackFunction = (A,Y) -> {
-            A.setValue(A.getValue()+dA);
-            return A;
-        };
-        BiFunction<DataFeedDataPacket<Double,Double>,Double,Boolean> triggerRule = (A,B) -> {
-            return A.getValue() < A.getAggregate();
-        };
-        return getCyclicHomogeneousNetwork(networkId, preProcessingRule, dataTransferRuleA, aggregatingRule, dataTransferRuleB, feedbackFunction, triggerRule);
+        Double integral = integratorNetwork.integrate(x -> x*x, 0.0, 1.0, 0.1);
+        System.out.println("Final value is: " + integral);
     }
 
     private static DataFeedNetwork<Integer,String> getCollatzNetwork(String networkId) {

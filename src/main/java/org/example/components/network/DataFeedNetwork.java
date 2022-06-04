@@ -21,7 +21,7 @@ public class DataFeedNetwork<A,B> extends AbstractNetwork {
     private final DataFeedNetworkTopology networkTopology;
     private final Logger logger = Logger.getLogger(DataFeedNetwork.class.getName());
 
-    DataFeedNetwork(Builder<A,B> builder) {
+    protected DataFeedNetwork(Builder<A, B> builder) {
         super(builder.networkId);
         this.nodes = builder.idToNodeMap;
         this.edges = builder.idToEdgeMap;
@@ -150,6 +150,10 @@ public class DataFeedNetwork<A,B> extends AbstractNetwork {
             addNode(networkId, preProcessingFunction, dataTransferFunctionA, aggregatingFunction, dataTransferFunctionB, feedbackFunction, triggerFunction);
             addConnection(networkId, networkId);
             return build();
+        }
+
+        protected String getNetworkId() {
+            return networkId;
         }
     }
 }
