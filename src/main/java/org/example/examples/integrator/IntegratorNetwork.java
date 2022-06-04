@@ -2,7 +2,6 @@ package org.example.examples.integrator;
 
 import org.example.components.network.DataFeedNetwork;
 
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class IntegratorNetwork extends DataFeedNetwork<IntegratorDataA,IntegratorDataB> {
@@ -47,30 +46,14 @@ public class IntegratorNetwork extends DataFeedNetwork<IntegratorDataA,Integrato
 
     public static class Builder extends DataFeedNetwork.Builder<IntegratorDataA,IntegratorDataB> {
 
-        private final Function<IntegratorDataA,IntegratorDataA> preProcessingFunction = Function.identity();
-        private final Function<IntegratorDataA,Double> dataTransferFunctionA = integratorDataA -> {
-            Double value = integratorDataA.getLowerBound();
-            Double stepSize = integratorDataA.getStepSize();
-            Function<Double,Double> function = integratorDataA.getFunction();
-            return stepSize*(function.apply(value + stepSize) + function.apply(value))/2;
-        };
-        private final BiFunction<IntegratorDataB,Double,IntegratorDataB> aggregatingFunction = (integratorDataB, dF) -> {
-            integratorDataB.setIntegralValue(integratorDataB.getIntegralValue() + dF);
-            return integratorDataB;
-        };
-        private final Function<IntegratorDataB,Double> dataTransferFunctionB = integratorDataB -> null;
-        private final BiFunction<IntegratorDataA,Double,IntegratorDataA> feedbackFunction = (integratorDataA, feedbackValue) -> {
-            integratorDataA.setLowerBound(integratorDataA.getLowerBound() + integratorDataA.getStepSize());
-            return integratorDataA;
-        };
-        private final BiFunction<IntegratorDataA,IntegratorDataB,Boolean> triggerFunction = (integratorDataA, integratorDataB) -> integratorDataA.getLowerBound()+ integratorDataA.getStepSize() <= integratorDataA.getUpperBound();
+        private final IntegratorFunctions functions = new IntegratorFunctions();
 
         public Builder(String networkId) {
             super(networkId);
         }
 
         public IntegratorNetwork build() {
-            addNode(getNetworkId(), preProcessingFunction, dataTransferFunctionA, aggregatingFunction, dataTransferFunctionB, feedbackFunction, triggerFunction);
+            addNode(getNetworkId(), functions);
             addConnection(getNetworkId(), getNetworkId());
             return new IntegratorNetwork(this);
         }

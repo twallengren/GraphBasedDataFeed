@@ -1,5 +1,6 @@
 package org.example.components.network;
 
+import org.example.components.data.DataFeedFunctions;
 import org.example.components.edge.DataFeedNetworkEdge;
 import org.example.components.node.DataFeedNetworkNode;
 import org.example.components.topology.DataFeedNetworkTopology;
@@ -100,17 +101,12 @@ public class DataFeedNetwork<A,B> extends AbstractNetwork {
 
         public <X,Y> Builder<A,B> addNode(
                 String nodeId,
-                Function<A,A> preProcessingFunction,
-                Function<A,X> dataTransferFunctionA,
-                BiFunction<B,X,B> aggregatingFunction,
-                Function<B,Y> dataTransferFunctionB,
-                BiFunction<A,Y,A> feedbackFunction,
-                BiFunction<A,B,Boolean> triggerFunction) {
+                DataFeedFunctions<A,X,B,Y> functions) {
             if (idToNodeMap.containsKey(nodeId)) {
                 logger.info("Node " + nodeId + " already exists.");
             } else {
                 DataFeedNetworkNode<A,X,B,Y> networkNode;
-                networkNode = new DataFeedNetworkNode.Builder<>(nodeId, preProcessingFunction, dataTransferFunctionA, aggregatingFunction, dataTransferFunctionB, feedbackFunction, triggerFunction).build();
+                networkNode = new DataFeedNetworkNode.Builder<>(nodeId, functions).build();
                 idToNodeMap.put(nodeId, networkNode);
                 logger.info("Node "+ nodeId + " created.");
             }
@@ -142,18 +138,6 @@ public class DataFeedNetwork<A,B> extends AbstractNetwork {
         public DataFeedNetwork<A,B> build() {
             logger.info("Building DataFeedNetwork...");
             return new DataFeedNetwork<>(this);
-        }
-
-        public <X,Y> DataFeedNetwork<A,B> buildCyclicHomogeneousNetwork(
-                Function<A,A> preProcessingFunction,
-                Function<A,X> dataTransferFunctionA,
-                BiFunction<B,X,B> aggregatingFunction,
-                Function<B,Y> dataTransferFunctionB,
-                BiFunction<A,Y,A> feedbackFunction,
-                BiFunction<A,B,Boolean> triggerFunction) {
-            addNode(networkId, preProcessingFunction, dataTransferFunctionA, aggregatingFunction, dataTransferFunctionB, feedbackFunction, triggerFunction);
-            addConnection(networkId, networkId);
-            return build();
         }
 
         protected String getNetworkId() {

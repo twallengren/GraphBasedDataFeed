@@ -89,9 +89,9 @@ public class DataFeedNetworkNode<A,X,B,Y> extends AbstractNetworkNode {
         private final String nodeId;
         private final DataFeedFunctions<A,X,B,Y> functions;
 
-        public Builder(String nodeId, Function<A, A> preProcessingFunction, Function<A, X> dataTransferFunctionA, BiFunction<B, X, B> aggregatingFunction, Function<B, Y> dataTransferFunctionB, BiFunction<A, Y, A> feedbackFunction, BiFunction<A, B, Boolean> triggerFunction) {
+        public Builder(String nodeId, DataFeedFunctions<A,X,B,Y> functions) {
             this.nodeId = nodeId;
-            functions = new DataFeedFunctions<>(preProcessingFunction, dataTransferFunctionA, aggregatingFunction, dataTransferFunctionB, feedbackFunction, triggerFunction);
+            this.functions = functions;
         }
 
         public DataFeedNetworkNode<A,X,B,Y> build() {
