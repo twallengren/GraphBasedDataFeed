@@ -23,7 +23,7 @@ public class IntegratorFunctions extends DataFeedFunctions<IntegratorDataA,Doubl
         integratorDataA.setLowerBound(integratorDataA.getLowerBound() + integratorDataA.getStepSize());
         return integratorDataA;
     };
-    private static final BiFunction<IntegratorDataA,IntegratorDataB,Boolean> triggerFunction = (integratorDataA, integratorDataB) -> integratorDataA.getLowerBound()+ integratorDataA.getStepSize() <= integratorDataA.getUpperBound();
+    private static final BiFunction<IntegratorDataA,IntegratorDataB,Boolean> triggerFunction = (integratorDataA, integratorDataB) -> integratorDataA.getLowerBound() + integratorDataA.getStepSize() <= integratorDataA.getUpperBound();
 
     public IntegratorFunctions() {
         super(preProcessingFunction, dataTransferFunctionA, aggregatingFunction, dataTransferFunctionB, feedbackFunction, triggerFunction);
